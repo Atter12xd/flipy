@@ -1,0 +1,23 @@
+{
+  "name": "flipy",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "web-app",
+    "app-motorizado",
+    "app-tienda"
+  ],
+  "scripts": {
+    "dev": "npm -v && echo 'Usa: dev:backend | dev:web | dev:app-motorizado | dev:app-tienda'",
+    "dev:backend": "npm run dev -w backend",
+    "start:backend": "npm run start -w backend",
+    "dev:web": "npm run dev -w web-app",
+    "build:web": "npm run build -w web-app",
+    "start:web": "npm run start -w web-app",
+    "dev:app-motorizado": "npm run dev -w app-motorizado",
+    "dev:app-tienda": "npm run dev -w app-tienda"
+  }
+}
+
+

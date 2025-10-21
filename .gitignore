@@ -1,0 +1,50 @@
+# Dependencias
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Builds y artefactos
+dist/
+build/
+.next/
+.expo/
+coverage/
+
+# Sistemas operativos
+.DS_Store
+Thumbs.db
+
+# Entornos
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# React Native - Android
+android/.gradle/
+android/.idea/
+android/local.properties
+android/app/build/
+android/build/
+*.iml
+*.keystore
+
+# React Native - iOS
+ios/build/
+ios/Pods/
+ios/.derivedData/
+ios/*.xcworkspace/xcuserdata/
+ios/*.xcodeproj/xcuserdata/
+
+# Monorepo lockfiles en paquetes (usar lock en raíz si aplica)
+**/package-lock.json
+**/yarn.lock
+**/pnpm-lock.yaml
+
+
