@@ -1,0 +1,160 @@
+// FLIPY - Schema de base de datos
+// Sistema de delivery con pujas
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["public"]
+
+}
+
+// Modelo de Usuario base
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      UserRole @default(TIENDA)
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  motorizado   Motorizado?
+  tienda       Tienda?
+  transacciones TiendaTransaccion[]
+
+  @@schema("public")
+  @@map("users")
+}
+
+// Modelo específico para Motorizados
+model Motorizado {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  licencia          String   @unique
+  vehiculo          String
+  documentos        Json?    // Documentos verificados
+  suscripcionActiva Boolean  @default(false)
+  trialHasta        DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relaciones
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ofertas Oferta[]
+
+  @@schema("public")
+  @@map("motorizados")
+}
+
+// Modelo específico para Tiendas
+model Tienda {
+  id       String  @id @default(cuid())
+  userId   String  @unique
+  nombre   String
+  direccion String
+  billetera Float   @default(0.0)
+  comision  Float   @default(0.05) // 5% por defecto
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  envios        Envio[]
+  transacciones TiendaTransaccion[]
+
+  @@schema("public")
+  @@map("tiendas")
+}
+
+// Modelo de Envíos
+model Envio {
+  id        String      @id @default(cuid())
+  tiendaId  String
+  origen    Json        // { lat, lng, direccion, nombre }
+  destino   Json        // { lat, lng, direccion, nombre }
+  precio    Float
+  estado    EnvioEstado @default(PENDIENTE_PUJAS)
+  detalles  String?     // Descripción del envío
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  // Relaciones
+  tienda Tienda  @relation(fields: [tiendaId], references: [id], onDelete: Cascade)
+  ofertas Oferta[]
+
+  @@schema("public")
+  @@map("envios")
+}
+
+// Modelo de Ofertas/Pujas
+model Oferta {
+  id              String      @id @default(cuid())
+  envioId         String
+  motorizadoId    String
+  precioOferta    Float
+  tiempoEstimado  Int         // En minutos
+  aceptada        Boolean     @default(false)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relaciones
+  envio      Envio      @relation(fields: [envioId], references: [id], onDelete: Cascade)
+  motorizado Motorizado @relation(fields: [motorizadoId], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+  @@map("ofertas")
+}
+
+// Modelo de Transacciones de Tienda
+model TiendaTransaccion {
+  id          String           @id @default(cuid())
+  tiendaId    String
+  userId      String?          // Usuario que realizó la transacción
+  monto       Float
+  tipo        TransaccionTipo
+  descripcion String?
+  createdAt   DateTime         @default(now())
+
+  // Relaciones
+  tienda Tienda @relation(fields: [tiendaId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@schema("public")
+  @@map("tienda_transacciones")
+}
+
+// Enums
+enum UserRole {
+  MOTORIZADO
+  TIENDA
+  ADMIN
+
+  @@schema("public")
+}
+
+enum EnvioEstado {
+  BORRADOR
+  PENDIENTE_PUJAS
+  ASIGNADO
+  EN_CURSO
+  ENTREGADO
+  CANCELADO
+
+  @@schema("public")
+}
+
+enum TransaccionTipo {
+  PAGO_ENVIO
+  COMISION
+  REEMBOLSO
+  RECARGA
+  RETIRO
+
+  @@schema("public")
+}
