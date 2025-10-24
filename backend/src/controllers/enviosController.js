@@ -73,7 +73,9 @@ const createEnvio = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error en createEnvio:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error en createEnvio:', error);
+    }
     res.status(500).json({
       message: 'Error al crear envío',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -146,7 +148,9 @@ const getEnvios = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error en getEnvios:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error en getEnvios:', error);
+    }
     res.status(500).json({
       message: 'Error al obtener envíos',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -223,7 +227,9 @@ const getEnvioById = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error en getEnvioById:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error en getEnvioById:', error);
+    }
     res.status(500).json({
       message: 'Error al obtener envío',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -306,7 +312,9 @@ const cancelEnvio = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error en cancelEnvio:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error en cancelEnvio:', error);
+    }
     res.status(500).json({
       message: 'Error al cancelar envío',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -387,7 +395,9 @@ const getEnviosAsignados = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error en getEnviosAsignados:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error en getEnviosAsignados:', error);
+    }
     res.status(500).json({
       success: false,
       message: 'Error al obtener envíos asignados',

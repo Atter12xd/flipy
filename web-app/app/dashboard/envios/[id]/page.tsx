@@ -49,25 +49,11 @@ export default function EnvioDetailPage({ params }: { params: { id: string } }) 
       setLoading(true);
       setError('');
 
-      console.log('=== INICIANDO CARGA DE DATOS ===');
-      console.log('ID del envío:', envioId);
-      console.log('URL completa del envío:', `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'}/envios/${envioId}`);
-
       // Obtener datos del envío y las ofertas en paralelo
       const [envioData, ofertasData] = await Promise.all([
         enviosAPI.getById(envioId),
         ofertasAPI.getByEnvio(envioId),
       ]);
-
-      console.log('=== RESPUESTA DEL SERVIDOR ===');
-      console.log('Envío completo:', JSON.stringify(envioData, null, 2));
-      console.log('Ofertas completo:', JSON.stringify(ofertasData, null, 2));
-      
-      console.log('=== EXTRAYENDO DATA ===');
-      console.log('envioData.data:', envioData.data);
-      console.log('envioData.success:', envioData.success);
-      console.log('ofertasData.data:', ofertasData.data);
-      console.log('ofertasData.success:', ofertasData.success);
 
       if (!envioData.data) {
         throw new Error('El servidor no retornó datos del envío');
@@ -75,12 +61,7 @@ export default function EnvioDetailPage({ params }: { params: { id: string } }) 
 
       setEnvio(envioData.data);
       setOfertas(ofertasData.data || []);
-      
-      console.log('=== DATOS CARGADOS EXITOSAMENTE ===');
     } catch (err: any) {
-      console.error('=== ERROR AL CARGAR DATOS ===');
-      console.error('Error completo:', err);
-      console.error('Mensaje de error:', err.message);
       setError(err.message || 'Error al cargar datos');
     } finally {
       setLoading(false);
@@ -89,7 +70,6 @@ export default function EnvioDetailPage({ params }: { params: { id: string } }) 
 
   useEffect(() => {
     if (params?.id) {
-      console.log('Ejecutando fetchData con ID:', params.id);
       fetchData(params.id);
     }
   }, [params?.id]);
@@ -240,6 +220,30 @@ export default function EnvioDetailPage({ params }: { params: { id: string } }) 
             )}
           </div>
         </div>
+
+        {/* Botón Ver en Mapa (solo si está EN_CURSO) */}
+        {envio.estado === 'EN_CURSO' && (
+          <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg shadow-lg p-6 mb-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="text-white">
+                <h3 className="text-xl font-bold mb-2">🚚 Envío en curso</h3>
+                <p className="text-sm opacity-90">
+                  El motorizado está en camino. Puedes seguir su ubicación en tiempo real.
+                </p>
+              </div>
+              <button
+                onClick={() => router.push(`/dashboard/envios/${params.id}/tracking`)}
+                className="bg-white text-blue-600 hover:bg-blue-50 font-bold py-3 px-6 rounded-lg transition-colors shadow-md flex items-center gap-2 justify-center"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Ver en Mapa
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Ofertas Recibidas */}
         <div className="bg-white rounded-lg shadow-lg p-8">

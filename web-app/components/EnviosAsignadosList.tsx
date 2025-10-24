@@ -45,7 +45,6 @@ export default function EnviosAsignadosList() {
       setEnvios(response.envios || []);
     } catch (err: any) {
       setError(err.message || 'Error al cargar envíos asignados');
-      console.error('Error cargando envíos asignados:', err);
     } finally {
       setLoading(false);
     }
@@ -206,29 +205,16 @@ export default function EnviosAsignadosList() {
 
                 {/* Botones de Acción */}
                 <div className="space-y-2">
-                  {envio.estado === 'ASIGNADO' && (
-                    <button
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors flex items-center justify-center gap-2"
-                      onClick={() => alert('Función "Iniciar Ruta" próximamente')}
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                      </svg>
-                      Iniciar Ruta
-                    </button>
-                  )}
-                  
-                  {envio.estado === 'EN_CURSO' && (
-                    <button
-                      className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors flex items-center justify-center gap-2"
-                      onClick={() => alert('Función "Marcar Entregado" próximamente')}
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Marcar como Entregado
-                    </button>
-                  )}
+                  <button
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors flex items-center justify-center gap-2"
+                    onClick={() => window.location.href = `/motorizado/envios/${envio.id}`}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    Ver Detalles y Controles
+                  </button>
 
                   {envio.estado === 'ENTREGADO' && (
                     <div className="text-center py-2">
@@ -256,5 +242,7 @@ export default function EnviosAsignadosList() {
     </div>
   );
 }
+
+
 
 

@@ -19,26 +19,33 @@
     "db:init": "prisma migrate dev --name init",
     "db:status": "prisma migrate status"
   },
-  "keywords": ["delivery", "pujas", "api", "express", "prisma"],
+  "keywords": [
+    "delivery",
+    "pujas",
+    "api",
+    "express",
+    "prisma"
+  ],
   "author": "FLIPY Team",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
-    "prisma": "^5.7.1",
     "@prisma/client": "^5.7.1",
-    "dotenv": "^16.3.1",
-    "cors": "^2.8.5",
-    "jsonwebtoken": "^9.0.2",
+    "@react-google-maps/api": "^2.20.7",
     "bcrypt": "^5.1.1",
-    "socket.io": "^4.7.4",
-    "helmet": "^7.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
     "express-rate-limit": "^7.1.5",
-    "morgan": "^1.10.0"
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "prisma": "^5.7.1",
+    "socket.io": "^4.7.4"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2",
+    "eslint": "^8.55.0",
     "jest": "^29.7.0",
-    "supertest": "^6.3.3",
-    "eslint": "^8.55.0"
+    "nodemon": "^3.0.2",
+    "supertest": "^6.3.3"
   }
 }

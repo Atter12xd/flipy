@@ -4,7 +4,7 @@
 
 import { getToken } from './auth';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 interface RequestOptions {
   method?: string;
@@ -37,8 +37,6 @@ async function request(endpoint: string, options: RequestOptions = {}) {
         ...config.headers,
         Authorization: `Bearer ${token}`,
       };
-    } else {
-      console.warn('⚠️ Request requiere autenticación pero no hay token');
     }
   }
 
@@ -47,23 +45,13 @@ async function request(endpoint: string, options: RequestOptions = {}) {
     config.body = JSON.stringify(body);
   }
 
-  console.log(`📡 ${method} ${url}`);
-  if (body) {
-    console.log('📤 Body:', body);
-  }
-
   const response = await fetch(url, config);
-  
-  console.log(`📥 Respuesta ${response.status} de ${url}`);
-  
   const data = await response.json();
 
   if (!response.ok) {
-    console.error(`❌ Error ${response.status}:`, data);
     throw new Error(data.message || 'Error en la petición');
   }
 
-  console.log(`✅ Success:`, data);
   return data;
 }
 
@@ -89,7 +77,7 @@ export const authAPI = {
    * Login de tienda
    */
   login: (credentials: LoginCredentials) =>
-    request('/auth/login', {
+    request('/api/auth/login', {
       method: 'POST',
       body: credentials,
     }),
@@ -98,7 +86,7 @@ export const authAPI = {
    * Registro de tienda
    */
   registerTienda: (data: RegisterTiendaData) =>
-    request('/auth/register/tienda', {
+    request('/api/auth/register/tienda', {
       method: 'POST',
       body: data,
     }),
@@ -127,7 +115,7 @@ export const enviosAPI = {
    * Obtener todos los envíos
    */
   getAll: () =>
-    request('/envios', {
+    request('/api/envios', {
       requiresAuth: true,
     }),
 
@@ -135,7 +123,7 @@ export const enviosAPI = {
    * Obtener un envío por ID
    */
   getById: (id: string) =>
-    request(`/envios/${id}`, {
+    request(`/api/envios/${id}`, {
       requiresAuth: true,
     }),
 
@@ -143,7 +131,7 @@ export const enviosAPI = {
    * Crear nuevo envío
    */
   create: (data: CreateEnvioData) =>
-    request('/envios', {
+    request('/api/envios', {
       method: 'POST',
       body: data,
       requiresAuth: true,
@@ -153,7 +141,7 @@ export const enviosAPI = {
    * Cancelar/Eliminar envío
    */
   delete: (id: string) =>
-    request(`/envios/${id}`, {
+    request(`/api/envios/${id}`, {
       method: 'DELETE',
       requiresAuth: true,
     }),
@@ -162,7 +150,7 @@ export const enviosAPI = {
    * Obtener envíos asignados al motorizado (solo MOTORIZADO)
    */
   getAsignados: () =>
-    request('/envios/motorizado/asignados', {
+    request('/api/envios/motorizado/asignados', {
       requiresAuth: true,
     }),
 };
@@ -182,7 +170,7 @@ export const ofertasAPI = {
    * Crear una nueva oferta (solo motorizados)
    */
   create: (data: CreateOfertaData) =>
-    request('/ofertas', {
+    request('/api/ofertas', {
       method: 'POST',
       body: data,
       requiresAuth: true,
@@ -192,7 +180,7 @@ export const ofertasAPI = {
    * Obtener ofertas de un envío
    */
   getByEnvio: (envioId: string) =>
-    request(`/ofertas/envio/${envioId}`, {
+    request(`/api/ofertas/envio/${envioId}`, {
       requiresAuth: true,
     }),
 
@@ -200,8 +188,47 @@ export const ofertasAPI = {
    * Aceptar una oferta
    */
   accept: (ofertaId: string) =>
-    request(`/ofertas/${ofertaId}/aceptar`, {
+    request(`/api/ofertas/${ofertaId}/aceptar`, {
       method: 'PUT',
+      requiresAuth: true,
+    }),
+};
+
+// ============================================
+// TRACKING GPS
+// ============================================
+
+export interface UpdateUbicacionData {
+  lat: number;
+  lng: number;
+}
+
+export const trackingAPI = {
+  /**
+   * Actualizar ubicación del motorizado (solo MOTORIZADO)
+   */
+  updateUbicacion: (envioId: string, data: UpdateUbicacionData) =>
+    request(`/api/tracking/${envioId}/ubicacion`, {
+      method: 'POST',
+      body: data,
+      requiresAuth: true,
+    }),
+
+  /**
+   * Obtener ubicación actual del envío
+   */
+  getUbicacion: (envioId: string) =>
+    request(`/api/tracking/${envioId}/ubicacion`, {
+      requiresAuth: true,
+    }),
+
+  /**
+   * Cambiar estado del envío (solo MOTORIZADO)
+   */
+  cambiarEstado: (envioId: string, nuevoEstado: string) =>
+    request(`/api/tracking/${envioId}/estado`, {
+      method: 'PUT',
+      body: { nuevoEstado },
       requiresAuth: true,
     }),
 };

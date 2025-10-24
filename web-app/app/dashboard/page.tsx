@@ -67,7 +67,6 @@ export default function DashboardPage() {
       setEnvios(response.envios || []);
     } catch (err: any) {
       setError(err.message || 'Error al cargar envíos');
-      console.error('Error cargando envíos:', err);
     } finally {
       setLoading(false);
     }

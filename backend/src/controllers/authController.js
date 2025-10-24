@@ -19,6 +19,13 @@ const registerMotorizado = async (req, res) => {
       });
     }
 
+    // Validar longitud de password
+    if (password.length < 8) {
+      return res.status(400).json({
+        message: 'La contraseña debe tener al menos 8 caracteres'
+      });
+    }
+
     // Verificar que el email no exista
     const existingUser = await prisma.user.findUnique({
       where: { email }
@@ -120,6 +127,13 @@ const registerTienda = async (req, res) => {
     if (!email || !password || !nombre || !direccion) {
       return res.status(400).json({
         message: 'Todos los campos son requeridos: email, password, nombre, direccion'
+      });
+    }
+
+    // Validar longitud de password
+    if (password.length < 8) {
+      return res.status(400).json({
+        message: 'La contraseña debe tener al menos 8 caracteres'
       });
     }
 

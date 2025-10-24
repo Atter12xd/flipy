@@ -56,6 +56,7 @@ app.use('/api/usuarios', require('./src/routes/usuarios'));
 app.use('/api/envios', require('./src/routes/envios'));
 app.use('/api/ofertas', require('./src/routes/ofertas'));
 app.use('/api/transacciones', require('./src/routes/transacciones'));
+app.use('/api/tracking', require('./src/routes/tracking'));
 
 // Middleware de manejo de errores
 app.use((err, req, res, next) => {

@@ -74,15 +74,17 @@ model Tienda {
 
 // Modelo de Envíos
 model Envio {
-  id        String      @id @default(cuid())
-  tiendaId  String
-  origen    Json        // { lat, lng, direccion, nombre }
-  destino   Json        // { lat, lng, direccion, nombre }
-  precio    Float
-  estado    EnvioEstado @default(PENDIENTE_PUJAS)
-  detalles  String?     // Descripción del envío
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id                    String      @id @default(cuid())
+  tiendaId              String
+  origen                Json        // { lat, lng, direccion, nombre }
+  destino               Json        // { lat, lng, direccion, nombre }
+  precio                Float
+  estado                EnvioEstado @default(PENDIENTE_PUJAS)
+  detalles              String?     // Descripción del envío
+  ubicacionActual       Json?       // { lat, lng, timestamp } - Ubicación actual del motorizado
+  historialUbicaciones  Json[]      @default([]) // Array de ubicaciones con timestamps
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
 
   // Relaciones
   tienda Tienda  @relation(fields: [tiendaId], references: [id], onDelete: Cascade)

@@ -143,10 +143,11 @@ export default function RegisterForm() {
             value={formData.password}
             onChange={handleChange}
             required
-            minLength={6}
+            minLength={8}
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="••••••••"
           />
+          <p className="text-xs text-gray-500 mt-1">Mínimo 8 caracteres</p>
         </div>
 
         <div className="mb-6">
@@ -160,7 +161,7 @@ export default function RegisterForm() {
             value={formData.confirmPassword}
             onChange={handleChange}
             required
-            minLength={6}
+            minLength={8}
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="••••••••"
           />
