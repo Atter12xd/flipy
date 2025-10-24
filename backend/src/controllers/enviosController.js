@@ -67,8 +67,9 @@ const createEnvio = async (req, res) => {
     });
 
     res.status(201).json({
+      success: true,
       message: 'Envío creado exitosamente',
-      envio
+      data: envio
     });
 
   } catch (error) {
@@ -139,6 +140,7 @@ const getEnvios = async (req, res) => {
     });
 
     res.status(200).json({
+      success: true,
       envios,
       total: envios.length
     });
@@ -215,7 +217,10 @@ const getEnvioById = async (req, res) => {
       }
     }
 
-    res.status(200).json({ envio });
+    res.status(200).json({ 
+      success: true,
+      data: envio 
+    });
 
   } catch (error) {
     console.error('Error en getEnvioById:', error);
@@ -295,8 +300,9 @@ const cancelEnvio = async (req, res) => {
     });
 
     res.status(200).json({
+      success: true,
       message: 'Envío cancelado exitosamente',
-      envio: envioActualizado
+      data: envioActualizado
     });
 
   } catch (error) {
@@ -308,10 +314,93 @@ const cancelEnvio = async (req, res) => {
   }
 };
 
+/**
+ * Obtener envíos asignados al motorizado
+ * GET /api/envios/motorizado/asignados
+ * Requiere: MOTORIZADO
+ */
+const getEnviosAsignados = async (req, res) => {
+  try {
+    // Validar que el usuario sea MOTORIZADO
+    if (req.user.role !== 'MOTORIZADO') {
+      return res.status(403).json({
+        success: false,
+        message: 'Solo los motorizados pueden acceder a esta ruta'
+      });
+    }
+
+    // Obtener motorizado del usuario
+    const motorizado = await prisma.motorizado.findUnique({
+      where: { userId: req.user.userId }
+    });
+
+    if (!motorizado) {
+      return res.status(404).json({
+        success: false,
+        message: 'Motorizado no encontrado'
+      });
+    }
+
+    // Buscar envíos donde el motorizado tiene una oferta aceptada
+    const enviosAsignados = await prisma.envio.findMany({
+      where: {
+        ofertas: {
+          some: {
+            motorizadoId: motorizado.id,
+            aceptada: true
+          }
+        },
+        estado: {
+          in: ['ASIGNADO', 'EN_CURSO', 'ENTREGADO']
+        }
+      },
+      include: {
+        tienda: {
+          select: {
+            id: true,
+            nombre: true,
+            direccion: true,
+            user: {
+              select: {
+                email: true,
+                phone: true
+              }
+            }
+          }
+        },
+        ofertas: {
+          where: {
+            motorizadoId: motorizado.id,
+            aceptada: true
+          }
+        }
+      },
+      orderBy: {
+        updatedAt: 'desc'
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      envios: enviosAsignados,
+      total: enviosAsignados.length
+    });
+
+  } catch (error) {
+    console.error('Error en getEnviosAsignados:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener envíos asignados',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
 module.exports = {
   createEnvio,
   getEnvios,
   getEnvioById,
-  cancelEnvio
+  cancelEnvio,
+  getEnviosAsignados
 };
 

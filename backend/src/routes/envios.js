@@ -26,6 +26,17 @@ router.get('/',
 );
 
 /**
+ * @route   GET /api/envios/motorizado/asignados
+ * @desc    Obtener envíos asignados al motorizado
+ * @access  Private (MOTORIZADO)
+ */
+router.get('/motorizado/asignados', 
+  verifyToken, 
+  requireRole(['MOTORIZADO']), 
+  enviosController.getEnviosAsignados
+);
+
+/**
  * @route   GET /api/envios/:id
  * @desc    Obtener envío por ID
  * @access  Private

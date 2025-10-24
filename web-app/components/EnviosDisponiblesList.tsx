@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { enviosAPI } from '@/lib/api';
+import OfertaForm from './OfertaForm';
 
 interface Envio {
   id: string;
@@ -22,6 +23,8 @@ export default function EnviosDisponiblesList() {
   const [envios, setEnvios] = useState<Envio[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [envioSeleccionado, setEnvioSeleccionado] = useState<Envio | null>(null);
 
   useEffect(() => {
     loadEnvios();
@@ -53,6 +56,22 @@ export default function EnviosDisponiblesList() {
       return destino.direccion;
     }
     return destino || 'N/A';
+  };
+
+  const handleHacerOferta = (envio: Envio) => {
+    setEnvioSeleccionado(envio);
+    setModalAbierto(true);
+  };
+
+  const handleCerrarModal = () => {
+    setModalAbierto(false);
+    setEnvioSeleccionado(null);
+  };
+
+  const handleOfertaExito = () => {
+    // Recargar envíos después de crear oferta exitosa
+    loadEnvios();
+    handleCerrarModal();
   };
 
   if (loading) {
@@ -130,12 +149,59 @@ export default function EnviosDisponiblesList() {
 
               <button
                 className="mt-4 w-full bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors"
-                onClick={() => alert('Función de ofertar próximamente')}
+                onClick={() => handleHacerOferta(envio)}
               >
                 Hacer Oferta
               </button>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Modal de Oferta */}
+      {modalAbierto && envioSeleccionado && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Botón cerrar */}
+            <button
+              onClick={handleCerrarModal}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Información del envío */}
+            <div className="bg-purple-50 border-b border-purple-100 p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Información del Envío</h3>
+              <div className="grid md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <p className="text-xs text-gray-600 font-semibold mb-1">Origen:</p>
+                  <p className="text-sm text-gray-900">{getOrigenDireccion(envioSeleccionado.origen)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 font-semibold mb-1">Destino:</p>
+                  <p className="text-sm text-gray-900">{getDestinoDireccion(envioSeleccionado.destino)}</p>
+                </div>
+              </div>
+              {envioSeleccionado.detalles && (
+                <div>
+                  <p className="text-xs text-gray-600 font-semibold mb-1">Detalles:</p>
+                  <p className="text-sm text-gray-900">{envioSeleccionado.detalles}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Formulario de oferta */}
+            <div className="p-6">
+              <OfertaForm
+                envioId={envioSeleccionado.id}
+                precioBase={envioSeleccionado.precio}
+                onSuccess={handleOfertaExito}
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>

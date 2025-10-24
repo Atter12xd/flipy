@@ -19,6 +19,8 @@ interface RequestOptions {
 async function request(endpoint: string, options: RequestOptions = {}) {
   const { method = 'GET', body, headers = {}, requiresAuth = false } = options;
 
+  const url = `${API_URL}${endpoint}`;
+  
   const config: RequestInit = {
     method,
     headers: {
@@ -35,6 +37,8 @@ async function request(endpoint: string, options: RequestOptions = {}) {
         ...config.headers,
         Authorization: `Bearer ${token}`,
       };
+    } else {
+      console.warn('⚠️ Request requiere autenticación pero no hay token');
     }
   }
 
@@ -43,13 +47,23 @@ async function request(endpoint: string, options: RequestOptions = {}) {
     config.body = JSON.stringify(body);
   }
 
-  const response = await fetch(`${API_URL}${endpoint}`, config);
+  console.log(`📡 ${method} ${url}`);
+  if (body) {
+    console.log('📤 Body:', body);
+  }
+
+  const response = await fetch(url, config);
+  
+  console.log(`📥 Respuesta ${response.status} de ${url}`);
+  
   const data = await response.json();
 
   if (!response.ok) {
+    console.error(`❌ Error ${response.status}:`, data);
     throw new Error(data.message || 'Error en la petición');
   }
 
+  console.log(`✅ Success:`, data);
   return data;
 }
 
@@ -143,13 +157,37 @@ export const enviosAPI = {
       method: 'DELETE',
       requiresAuth: true,
     }),
+
+  /**
+   * Obtener envíos asignados al motorizado (solo MOTORIZADO)
+   */
+  getAsignados: () =>
+    request('/envios/motorizado/asignados', {
+      requiresAuth: true,
+    }),
 };
 
 // ============================================
 // OFERTAS
 // ============================================
 
+export interface CreateOfertaData {
+  envioId: string;
+  precioOferta: number;
+  tiempoEstimado: number;
+}
+
 export const ofertasAPI = {
+  /**
+   * Crear una nueva oferta (solo motorizados)
+   */
+  create: (data: CreateOfertaData) =>
+    request('/ofertas', {
+      method: 'POST',
+      body: data,
+      requiresAuth: true,
+    }),
+
   /**
    * Obtener ofertas de un envío
    */

@@ -3,11 +3,18 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { isAuthenticated, getUser, logout } from '@/lib/auth';
+import { enviosAPI } from '@/lib/api';
 import EnviosDisponiblesList from '@/components/EnviosDisponiblesList';
+import EnviosAsignadosList from '@/components/EnviosAsignadosList';
 
 export default function MotorizadoDashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  const [estadisticas, setEstadisticas] = useState({
+    disponibles: 0,
+    asignados: 0,
+    completados: 0,
+  });
 
   useEffect(() => {
     // Verificar autenticación
@@ -25,7 +32,30 @@ export default function MotorizadoDashboardPage() {
     }
 
     setUser(userData);
+    loadEstadisticas();
   }, [router]);
+
+  const loadEstadisticas = async () => {
+    try {
+      // Obtener envíos disponibles y asignados
+      const [disponibles, asignados] = await Promise.all([
+        enviosAPI.getAll(),
+        enviosAPI.getAsignados(),
+      ]);
+
+      const completados = (asignados.envios || []).filter(
+        (e: any) => e.estado === 'ENTREGADO'
+      ).length;
+
+      setEstadisticas({
+        disponibles: disponibles.total || 0,
+        asignados: (asignados.total || 0) - completados,
+        completados,
+      });
+    } catch (error) {
+      console.error('Error al cargar estadísticas:', error);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -85,7 +115,7 @@ export default function MotorizadoDashboardPage() {
               </div>
               <div className="ml-5">
                 <p className="text-sm font-medium text-gray-500">Envíos Disponibles</p>
-                <p className="text-2xl font-semibold text-gray-900">Ver lista</p>
+                <p className="text-2xl font-semibold text-gray-900">{estadisticas.disponibles}</p>
               </div>
             </div>
           </div>
@@ -98,8 +128,8 @@ export default function MotorizadoDashboardPage() {
                 </svg>
               </div>
               <div className="ml-5">
-                <p className="text-sm font-medium text-gray-500">Mis Ofertas</p>
-                <p className="text-2xl font-semibold text-gray-900">0</p>
+                <p className="text-sm font-medium text-gray-500">Envíos Asignados</p>
+                <p className="text-2xl font-semibold text-gray-900">{estadisticas.asignados}</p>
               </div>
             </div>
           </div>
@@ -113,7 +143,7 @@ export default function MotorizadoDashboardPage() {
               </div>
               <div className="ml-5">
                 <p className="text-sm font-medium text-gray-500">Envíos Completados</p>
-                <p className="text-2xl font-semibold text-gray-900">0</p>
+                <p className="text-2xl font-semibold text-gray-900">{estadisticas.completados}</p>
               </div>
             </div>
           </div>
@@ -136,9 +166,25 @@ export default function MotorizadoDashboardPage() {
           </div>
         )}
 
+        {/* Mis Envíos Asignados */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Mis Envíos Asignados
+          </h2>
+          <EnviosAsignadosList />
+        </div>
+
         {/* Lista de Envíos Disponibles */}
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Envíos Disponibles para Ofertar</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+            <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+            </svg>
+            Envíos Disponibles para Ofertar
+          </h2>
           <EnviosDisponiblesList />
         </div>
       </main>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ofertasAPI } from '@/lib/api';
 
 interface OfertaFormProps {
   envioId: string;
@@ -31,12 +32,29 @@ export default function OfertaForm({ envioId, precioBase, onSuccess }: OfertaFor
     setError('');
     setSuccess(false);
 
+    // Validaciones
+    const precio = parseFloat(formData.precioOferta);
+    const tiempo = parseInt(formData.tiempoEstimado);
+
+    if (precio <= 0) {
+      setError('El precio debe ser mayor a 0');
+      setLoading(false);
+      return;
+    }
+
+    if (tiempo <= 0) {
+      setError('El tiempo estimado debe ser mayor a 0');
+      setLoading(false);
+      return;
+    }
+
     try {
-      // TODO: Conectar con API de ofertas cuando esté lista
-      // await ofertasAPI.create({ envioId, ...formData });
-      
-      // Por ahora simulamos éxito
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Conectar con API de ofertas
+      await ofertasAPI.create({
+        envioId,
+        precioOferta: precio,
+        tiempoEstimado: tiempo,
+      });
       
       setSuccess(true);
       

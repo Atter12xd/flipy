@@ -286,19 +286,38 @@ export default function DashboardPage() {
                             {ESTADO_LABELS[envio.estado]}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {envio.ofertas?.length || 0} ofertas
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <div className="flex items-center gap-2">
+                            {envio.ofertas?.length ? (
+                              <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-semibold">
+                                {envio.ofertas.length} ofertas
+                              </span>
+                            ) : (
+                              <span className="text-gray-400 text-xs">Sin ofertas</span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          {envio.estado !== 'ENTREGADO' && envio.estado !== 'CANCELADO' && (
+                          <div className="flex items-center gap-2">
                             <button
-                              onClick={() => handleDeleteEnvio(envio.id)}
-                              disabled={deletingId === envio.id}
-                              className="text-red-600 hover:text-red-900 disabled:opacity-50"
+                              onClick={() => router.push(`/dashboard/envios/${envio.id}`)}
+                              className="text-purple-600 hover:text-purple-900 font-semibold"
                             >
-                              {deletingId === envio.id ? 'Cancelando...' : 'Cancelar'}
+                              Ver Ofertas
                             </button>
-                          )}
+                            {envio.estado !== 'ENTREGADO' && envio.estado !== 'CANCELADO' && (
+                              <>
+                                <span className="text-gray-300">|</span>
+                                <button
+                                  onClick={() => handleDeleteEnvio(envio.id)}
+                                  disabled={deletingId === envio.id}
+                                  className="text-red-600 hover:text-red-900 disabled:opacity-50"
+                                >
+                                  {deletingId === envio.id ? 'Cancelando...' : 'Cancelar'}
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
