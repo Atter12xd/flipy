@@ -233,3 +233,91 @@ export const trackingAPI = {
     }),
 };
 
+// ============================================
+// RASTREO PÚBLICO (sin autenticación)
+// ============================================
+
+export const publicAPI = {
+  /**
+   * Obtener envío por token público (NO requiere autenticación)
+   */
+  getEnvioByToken: (token: string) =>
+    request(`/api/public/rastreo/${token}`, {
+      requiresAuth: false,
+    }),
+};
+
+// ============================================
+// EVIDENCIAS DE ENTREGA
+// ============================================
+
+export const evidenciasAPI = {
+  /**
+   * Subir foto de entrega (multipart/form-data)
+   * Nota: Esta función maneja FormData directamente, no usa la función request()
+   */
+  subirFotoEntrega: async (envioId: string, file: File) => {
+    const token = getToken();
+    
+    // DEBUG: Verificar token
+    console.log('[API] getToken() retornó:', token ? `${token.substring(0, 20)}...` : 'NULL/UNDEFINED');
+    
+    if (!token) {
+      console.error('[API] ❌ Token es null/undefined - usuario no autenticado');
+      throw new Error('No estás autenticado');
+    }
+
+    const formData = new FormData();
+    formData.append('foto', file);
+
+    console.log('[API] Enviando request a:', `${API_URL}/api/evidencias/${envioId}/foto`);
+    console.log('[API] Token en header:', `Bearer ${token.substring(0, 20)}...`);
+
+    const response = await fetch(`${API_URL}/api/evidencias/${envioId}/foto`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('[API] ❌ Error del servidor:', response.status, data);
+      throw new Error(data.message || 'Error al subir foto');
+    }
+
+    console.log('[API] ✅ Foto subida exitosamente');
+    return data;
+  },
+
+  /**
+   * Guardar firma digital (base64)
+   */
+  guardarFirma: (envioId: string, firmaBase64: string) =>
+    request(`/api/evidencias/${envioId}/firma`, {
+      method: 'POST',
+      body: { firmaBase64 },
+      requiresAuth: true,
+    }),
+
+  /**
+   * Registrar método de pago usado
+   */
+  registrarMetodoPago: (envioId: string, metodoPago: string) =>
+    request(`/api/evidencias/${envioId}/metodo-pago`, {
+      method: 'POST',
+      body: { metodoPago },
+      requiresAuth: true,
+    }),
+
+  /**
+   * Obtener evidencias de un envío
+   */
+  getEvidencias: (envioId: string) =>
+    request(`/api/evidencias/${envioId}`, {
+      requiresAuth: true,
+    }),
+};
+

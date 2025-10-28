@@ -1,4 +1,5 @@
 const prisma = require('../config/prisma');
+const { createId } = require('@paralleldrive/cuid2');
 
 /**
  * Crear nuevo envío
@@ -49,7 +50,8 @@ const createEnvio = async (req, res) => {
         destino,
         precio: parseFloat(precio),
         detalles: detalles || null,
-        estado: 'PENDIENTE_PUJAS'
+        estado: 'PENDIENTE_PUJAS',
+        trackingToken: createId()
       },
       include: {
         tienda: {

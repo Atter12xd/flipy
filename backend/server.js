@@ -50,6 +50,12 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Servir archivos estáticos (uploads)
+app.use('/uploads', express.static('uploads'));
+
+// Rutas públicas (sin autenticación)
+app.use('/api/public', require('./src/routes/publicTracking'));
+
 // Rutas de la API
 app.use('/api/auth', require('./src/routes/auth'));
 app.use('/api/usuarios', require('./src/routes/usuarios'));
@@ -57,6 +63,7 @@ app.use('/api/envios', require('./src/routes/envios'));
 app.use('/api/ofertas', require('./src/routes/ofertas'));
 app.use('/api/transacciones', require('./src/routes/transacciones'));
 app.use('/api/tracking', require('./src/routes/tracking'));
+app.use('/api/evidencias', require('./src/routes/evidencias'));
 
 // Middleware de manejo de errores
 app.use((err, req, res, next) => {

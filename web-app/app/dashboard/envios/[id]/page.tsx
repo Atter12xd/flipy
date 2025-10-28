@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { enviosAPI, ofertasAPI } from '@/lib/api';
+import VerEvidencias from '@/components/VerEvidencias';
 
 interface Oferta {
   id: string;
@@ -33,6 +34,7 @@ interface Envio {
   precio: number;
   detalles?: string;
   estado: string;
+  trackingToken?: string;
   createdAt: string;
 }
 
@@ -43,6 +45,7 @@ export default function EnvioDetailPage({ params }: { params: { id: string } }) 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [aceptandoOferta, setAceptandoOferta] = useState<string | null>(null);
+  const [linkCopiado, setLinkCopiado] = useState(false);
 
   const fetchData = async (envioId: string) => {
     try {
@@ -93,6 +96,20 @@ export default function EnvioDetailPage({ params }: { params: { id: string } }) 
       alert(err.message || 'Error al aceptar oferta');
     } finally {
       setAceptandoOferta(null);
+    }
+  };
+
+  const handleCopiarLink = async () => {
+    if (!envio?.trackingToken) return;
+    
+    const url = `${window.location.origin}/rastreo/${envio.trackingToken}`;
+    
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopiado(true);
+      setTimeout(() => setLinkCopiado(false), 3000);
+    } catch (err) {
+      alert('Error al copiar el link');
     }
   };
 
@@ -221,6 +238,51 @@ export default function EnvioDetailPage({ params }: { params: { id: string } }) 
           </div>
         </div>
 
+        {/* Compartir Rastreo */}
+        {envio.trackingToken && (
+          <div className="bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg shadow-lg p-6 mb-6">
+            <div className="text-white">
+              <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+                Compartir Rastreo
+              </h3>
+              <p className="text-sm opacity-90 mb-4">
+                Comparte este link con tu cliente para que rastree su pedido en tiempo real
+              </p>
+              
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4 mb-4">
+                <p className="text-xs text-white/80 mb-2">Link público de rastreo:</p>
+                <p className="font-mono text-sm break-all text-white">
+                  {`${typeof window !== 'undefined' ? window.location.origin : ''}/rastreo/${envio.trackingToken}`}
+                </p>
+              </div>
+
+              <button
+                onClick={handleCopiarLink}
+                className="bg-white text-indigo-600 hover:bg-indigo-50 font-bold py-3 px-6 rounded-lg transition-colors shadow-md flex items-center gap-2"
+              >
+                {linkCopiado ? (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    ¡Link Copiado!
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                    Copiar Link
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Botón Ver en Mapa (solo si está EN_CURSO) */}
         {envio.estado === 'EN_CURSO' && (
           <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg shadow-lg p-6 mb-6">
@@ -242,6 +304,13 @@ export default function EnvioDetailPage({ params }: { params: { id: string } }) 
                 Ver en Mapa
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Evidencias de Entrega - Solo cuando está ENTREGADO */}
+        {envio.estado === 'ENTREGADO' && (
+          <div className="mb-6">
+            <VerEvidencias envioId={params.id} />
           </div>
         )}
 

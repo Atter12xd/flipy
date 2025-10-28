@@ -83,6 +83,12 @@ model Envio {
   detalles              String?     // Descripción del envío
   ubicacionActual       Json?       // { lat, lng, timestamp } - Ubicación actual del motorizado
   historialUbicaciones  Json[]      @default([]) // Array de ubicaciones con timestamps
+  trackingToken         String?     @unique // Token único para rastreo público
+  fotoEntrega           String?     // URL de la foto de entrega
+  firmaDigital          String?     // Firma digital en base64 o URL
+  metodoPago            String?     // efectivo, tarjeta, yape, plin, transferencia
+  fechaEntrega          DateTime?   // Fecha y hora de entrega
+  evidencias            Json?       // Metadata adicional de evidencias
   createdAt             DateTime    @default(now())
   updatedAt             DateTime    @updatedAt
 
