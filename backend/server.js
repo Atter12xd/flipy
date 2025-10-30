@@ -19,9 +19,18 @@ app.use(cors({
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutos
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // límite por IP
-  message: 'Demasiadas solicitudes desde esta IP, intenta de nuevo más tarde.'
+  windowMs: 1 * 60 * 1000, // 1 minuto
+  max: 1000, // 1000 requests por minuto (generoso para desarrollo)
+  handler: (req, res) => {
+    res.status(429).json({
+      success: false,
+      message: 'Demasiadas solicitudes, espera un momento'
+    });
+  },
+  skip: (req) => {
+    // Saltar rate limit en desarrollo
+    return process.env.NODE_ENV === 'development';
+  }
 });
 app.use(limiter);
 
@@ -64,6 +73,8 @@ app.use('/api/ofertas', require('./src/routes/ofertas'));
 app.use('/api/transacciones', require('./src/routes/transacciones'));
 app.use('/api/tracking', require('./src/routes/tracking'));
 app.use('/api/evidencias', require('./src/routes/evidencias'));
+app.use('/api/suscripcion', require('./src/routes/suscripcion'));
+app.use('/api/notificaciones', require('./src/routes/notificaciones'));
 
 // Middleware de manejo de errores
 app.use((err, req, res, next) => {

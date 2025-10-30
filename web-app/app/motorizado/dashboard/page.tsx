@@ -3,13 +3,15 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { isAuthenticated, getUser, logout } from '@/lib/auth';
-import { enviosAPI } from '@/lib/api';
+import { enviosAPI, suscripcionAPI, type EstadoSuscripcion } from '@/lib/api';
 import EnviosDisponiblesList from '@/components/EnviosDisponiblesList';
 import EnviosAsignadosList from '@/components/EnviosAsignadosList';
+import BannerSuscripcionVencida from '@/components/BannerSuscripcionVencida';
 
 export default function MotorizadoDashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  const [estadoSuscripcion, setEstadoSuscripcion] = useState<EstadoSuscripcion | null>(null);
   const [estadisticas, setEstadisticas] = useState({
     disponibles: 0,
     asignados: 0,
@@ -33,7 +35,17 @@ export default function MotorizadoDashboardPage() {
 
     setUser(userData);
     loadEstadisticas();
+    loadEstadoSuscripcion();
   }, [router]);
+
+  const loadEstadoSuscripcion = async () => {
+    try {
+      const response = await suscripcionAPI.getEstado();
+      setEstadoSuscripcion(response.data);
+    } catch (error) {
+      console.error('Error al cargar estado de suscripción:', error);
+    }
+  };
 
   const loadEstadisticas = async () => {
     try {
@@ -74,8 +86,16 @@ export default function MotorizadoDashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Banner de Suscripción Vencida */}
+      {estadoSuscripcion?.bloqueado && (
+        <BannerSuscripcionVencida 
+          mensaje={estadoSuscripcion.mensaje}
+          diasRestantes={estadoSuscripcion.diasRestantes}
+        />
+      )}
+
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className={`bg-white shadow ${estadoSuscripcion?.bloqueado ? 'mt-20' : ''}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <div>
@@ -83,6 +103,28 @@ export default function MotorizadoDashboardPage() {
               <p className="text-sm text-gray-600">Envíos Disponibles</p>
             </div>
             <div className="flex items-center gap-4">
+              {/* Badge de Estado de Suscripción */}
+              {estadoSuscripcion && (
+                <button
+                  onClick={() => router.push('/motorizado/suscripcion')}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  {estadoSuscripcion.suscripcionActiva ? (
+                    <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                      ✓ Activo
+                    </span>
+                  ) : estadoSuscripcion.planActual === 'trial' ? (
+                    <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
+                      Trial - {estadoSuscripcion.diasRestantes}d
+                    </span>
+                  ) : (
+                    <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+                      ✕ Vencido
+                    </span>
+                  )}
+                </button>
+              )}
+              
               <div className="text-right">
                 <p className="text-sm font-semibold text-gray-900">{user.email}</p>
                 {user.motorizado && (
@@ -149,19 +191,41 @@ export default function MotorizadoDashboardPage() {
           </div>
         </div>
 
-        {/* Información del Trial */}
-        {user.motorizado?.trialHasta && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
-            <div className="flex items-start">
-              <svg className="h-5 w-5 text-yellow-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-yellow-800">Período de Prueba</h3>
-                <p className="text-sm text-yellow-700 mt-1">
-                  Tu período de prueba termina el {new Date(user.motorizado.trialHasta).toLocaleDateString()}
-                </p>
+        {/* Información del Estado de Suscripción */}
+        {estadoSuscripcion && estadoSuscripcion.suscripcionActiva && (
+          <div className={`border rounded-lg p-4 mb-8 ${
+            estadoSuscripcion.planActual === 'trial' 
+              ? 'bg-yellow-50 border-yellow-200' 
+              : 'bg-green-50 border-green-200'
+          }`}>
+            <div className="flex items-start justify-between">
+              <div className="flex items-start">
+                <svg className={`h-5 w-5 mt-0.5 ${
+                  estadoSuscripcion.planActual === 'trial' ? 'text-yellow-600' : 'text-green-600'
+                }`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div className="ml-3">
+                  <h3 className={`text-sm font-medium ${
+                    estadoSuscripcion.planActual === 'trial' ? 'text-yellow-800' : 'text-green-800'
+                  }`}>
+                    {estadoSuscripcion.planActual === 'trial' ? 'Período de Prueba' : 'Suscripción Activa'}
+                  </h3>
+                  <p className={`text-sm mt-1 ${
+                    estadoSuscripcion.planActual === 'trial' ? 'text-yellow-700' : 'text-green-700'
+                  }`}>
+                    {estadoSuscripcion.mensaje}
+                  </p>
+                </div>
               </div>
+              <button
+                onClick={() => router.push('/motorizado/suscripcion')}
+                className={`text-sm font-medium hover:underline ${
+                  estadoSuscripcion.planActual === 'trial' ? 'text-yellow-700' : 'text-green-700'
+                }`}
+              >
+                Ver detalles →
+              </button>
             </div>
           </div>
         )}

@@ -63,9 +63,14 @@ export default function DashboardPage() {
     try {
       setLoading(true);
       setError('');
+      console.log('[DASHBOARD] Cargando envíos...');
       const response = await enviosAPI.getAll();
+      console.log('[DASHBOARD] Respuesta de API:', response);
+      console.log('[DASHBOARD] Total de envíos:', response.envios?.length || 0);
+      console.log('[DASHBOARD] Estados:', response.envios?.map((e: any) => e.estado).join(', '));
       setEnvios(response.envios || []);
     } catch (err: any) {
+      console.error('[DASHBOARD] Error:', err);
       setError(err.message || 'Error al cargar envíos');
     } finally {
       setLoading(false);

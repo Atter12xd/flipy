@@ -41,6 +41,11 @@ model Motorizado {
   documentos        Json?    // Documentos verificados
   suscripcionActiva Boolean  @default(false)
   trialHasta        DateTime?
+  planActual        String   @default("trial") // "trial", "mensual", "anual", "inactivo"
+  proximoPago       DateTime?
+  ultimoPago        DateTime?
+  metodoPagoId      String?  // Para cuando integremos Culqi/Stripe
+  historialPagos    Json[]   @default([]) // Array de pagos
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -165,4 +170,21 @@ enum TransaccionTipo {
   RETIRO
 
   @@schema("public")
+}
+
+// Modelo de Notificaciones
+model Notificacion {
+  id           String    @id @default(cuid())
+  tipo         String    // "whatsapp", "email", "push"
+  destinatario String    // Teléfono o email
+  mensaje      String    @db.Text
+  asunto       String?   // Para emails
+  estado       String    @default("pendiente") // "pendiente", "enviada", "fallida"
+  enviadaEn    DateTime?
+  error        String?
+  metadata     Json?     // Info adicional (envioId, userId, etc)
+  createdAt    DateTime  @default(now())
+
+  @@schema("public")
+  @@map("notificaciones")
 }

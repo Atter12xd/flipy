@@ -1,5 +1,6 @@
 const prisma = require('../config/prisma');
 const { createId } = require('@paralleldrive/cuid2');
+const notificacionService = require('../services/notificacionService');
 
 /**
  * Crear nuevo envío
@@ -52,7 +53,50 @@ const createEnvio = async (req, res) => {
         detalles: detalles || null,
         estado: 'PENDIENTE_PUJAS',
         trackingToken: createId()
-      },
+      }
+    });
+
+    // Buscar tienda con usuario para notificación
+    const tiendaConUsuario = await prisma.tienda.findUnique({
+      where: { id: tienda.id },
+      include: {
+        user: {
+          select: { phone: true, email: true }
+        }
+      }
+    });
+
+    console.log('\n[ENVIOS DEBUG] ======================');
+    console.log('[ENVIOS DEBUG] Tienda completa:', JSON.stringify(tiendaConUsuario, null, 2));
+    console.log('[ENVIOS DEBUG] User:', tiendaConUsuario.user);
+    console.log('[ENVIOS DEBUG] Phone:', tiendaConUsuario.user?.phone);
+    console.log('[ENVIOS DEBUG] ======================\n');
+
+    // Enviar notificación WhatsApp (simulada)
+    console.log('[ENVIOS] Intentando enviar notificación WhatsApp...');
+    
+    const telefono = tiendaConUsuario.user?.phone;
+    console.log('[ENVIOS] Teléfono de tienda:', telefono || 'NO TIENE');
+    
+    if (telefono) {
+      const linkRastreo = `${process.env.FRONTEND_URL || 'http://localhost:3001'}/rastreo/${envio.trackingToken}`;
+      console.log('[ENVIOS] Link de rastreo generado:', linkRastreo);
+      console.log('[ENVIOS] Llamando a notificacionService.enviarWhatsApp...');
+      
+      const resultado = await notificacionService.enviarWhatsApp(
+        telefono,
+        notificacionService.templates.pedidoCreado(tiendaConUsuario.nombre, linkRastreo),
+        { envioId: envio.id, tipo: 'pedido_creado' }
+      );
+      
+      console.log('[ENVIOS] Resultado de notificación:', resultado);
+    } else {
+      console.log('[ENVIOS] ⚠️ No se envió notificación - tienda no tiene teléfono');
+    }
+
+    // Retornar envío con tienda completa
+    const envioCompleto = await prisma.envio.findUnique({
+      where: { id: envio.id },
       include: {
         tienda: {
           include: {
@@ -71,7 +115,7 @@ const createEnvio = async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Envío creado exitosamente',
-      data: envio
+      data: envioCompleto
     });
 
   } catch (error) {
@@ -93,6 +137,7 @@ const createEnvio = async (req, res) => {
  */
 const getEnvios = async (req, res) => {
   try {
+    console.log('[ENVIOS] Usuario:', req.user.email, 'Role:', req.user.role);
     let whereClause = {};
 
     if (req.user.role === 'TIENDA') {
@@ -107,6 +152,7 @@ const getEnvios = async (req, res) => {
         });
       }
 
+      console.log('[ENVIOS] Tienda encontrada:', tienda.nombre, 'ID:', tienda.id);
       // Solo envíos de esta tienda
       whereClause.tiendaId = tienda.id;
 
@@ -123,7 +169,13 @@ const getEnvios = async (req, res) => {
           select: {
             id: true,
             nombre: true,
-            direccion: true
+            direccion: true,
+            user: {
+              select: {
+                email: true,
+                phone: true
+              }
+            }
           }
         },
         ofertas: {
@@ -132,9 +184,18 @@ const getEnvios = async (req, res) => {
               select: {
                 id: true,
                 licencia: true,
-                vehiculo: true
+                vehiculo: true,
+                user: {
+                  select: {
+                    email: true,
+                    phone: true
+                  }
+                }
               }
             }
+          },
+          orderBy: {
+            createdAt: 'asc'
           }
         }
       },
@@ -143,6 +204,9 @@ const getEnvios = async (req, res) => {
       }
     });
 
+    console.log('[ENVIOS] Retornando', envios.length, 'envíos');
+    console.log('[ENVIOS] Estados:', envios.map(e => e.estado).join(', '));
+    
     res.status(200).json({
       success: true,
       envios,

@@ -321,3 +321,116 @@ export const evidenciasAPI = {
     }),
 };
 
+// ============================================
+// SUSCRIPCIONES
+// ============================================
+
+export interface EstadoSuscripcion {
+  planActual: string;
+  suscripcionActiva: boolean;
+  bloqueado: boolean;
+  trialHasta: string | null;
+  diasRestantes: number;
+  proximoPago: string | null;
+  ultimoPago: string | null;
+  mensaje: string;
+}
+
+export interface PagoSuscripcion {
+  fecha: string;
+  monto: number;
+  metodoPago: string;
+  estado: string;
+  transaccionId: string;
+  tipo: string;
+}
+
+export const suscripcionAPI = {
+  /**
+   * Obtener estado actual de la suscripción del motorizado
+   */
+  getEstado: () =>
+    request('/api/suscripcion/estado', {
+      requiresAuth: true,
+    }),
+
+  /**
+   * Simular pago de suscripción
+   */
+  simularPago: (metodoPago: 'yape' | 'tarjeta' | 'transferencia') =>
+    request('/api/suscripcion/simular-pago', {
+      method: 'POST',
+      body: { metodoPago },
+      requiresAuth: true,
+    }),
+
+  /**
+   * Obtener historial de pagos
+   */
+  getHistorial: () =>
+    request('/api/suscripcion/historial', {
+      requiresAuth: true,
+    }),
+};
+
+// ============================================
+// NOTIFICACIONES
+// ============================================
+
+export interface Notificacion {
+  id: string;
+  tipo: string;
+  destinatario: string;
+  mensaje: string;
+  asunto?: string;
+  estado: string;
+  enviadaEn?: string;
+  error?: string;
+  metadata?: any;
+  createdAt: string;
+}
+
+export interface EstadisticasNotificaciones {
+  ultimas24Horas: {
+    totalEnviadas: number;
+    totalFallidas: number;
+    total: number;
+    tasaExito: string;
+  };
+  porTipo: Array<{ tipo: string; count: number }>;
+  porEstado: Array<{ estado: string; count: number }>;
+}
+
+export const notificacionesAPI = {
+  /**
+   * Obtener notificaciones del usuario autenticado
+   */
+  getNotificaciones: (filtros?: { tipo?: string; limite?: number }) => {
+    const params = new URLSearchParams();
+    if (filtros?.tipo) params.append('tipo', filtros.tipo);
+    if (filtros?.limite) params.append('limite', filtros.limite.toString());
+    
+    return request(`/api/notificaciones?${params.toString()}`, {
+      requiresAuth: true,
+    });
+  },
+
+  /**
+   * Obtener estadísticas de notificaciones
+   */
+  getEstadisticas: () =>
+    request('/api/notificaciones/estadisticas', {
+      requiresAuth: true,
+    }),
+
+  /**
+   * Obtener todas las notificaciones (solo admin)
+   */
+  getAllNotificaciones: (limite?: number) => {
+    const params = limite ? `?limite=${limite}` : '';
+    return request(`/api/notificaciones/all${params}`, {
+      requiresAuth: true,
+    });
+  },
+};
+

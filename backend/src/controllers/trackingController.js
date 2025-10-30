@@ -1,4 +1,5 @@
 const prisma = require('../config/prisma');
+const notificacionService = require('../services/notificacionService');
 
 /**
  * Actualizar ubicación del motorizado durante entrega
@@ -321,13 +322,52 @@ const cambiarEstadoEnvio = async (req, res) => {
       },
       include: {
         tienda: {
-          select: {
-            id: true,
-            nombre: true
+          include: {
+            user: {
+              select: {
+                phone: true
+              }
+            }
           }
         }
       }
     });
+
+    // Enviar notificaciones según el nuevo estado
+    console.log('\n[TRACKING DEBUG] ======================');
+    console.log('[TRACKING DEBUG] Tienda user:', envioActualizado.tienda.user);
+    console.log('[TRACKING DEBUG] Phone:', envioActualizado.tienda.user?.phone);
+    console.log('[TRACKING DEBUG] Nuevo estado:', nuevoEstado);
+    console.log('[TRACKING DEBUG] ======================\n');
+    
+    const telefono = envioActualizado.tienda.user?.phone;
+    console.log('[TRACKING] Teléfono de tienda:', telefono || 'NO TIENE');
+    
+    if (telefono) {
+      const linkRastreo = `${process.env.FRONTEND_URL || 'http://localhost:3001'}/rastreo/${envio.trackingToken}`;
+
+      if (nuevoEstado === 'EN_CURSO') {
+        // Pedido en camino
+        console.log('[TRACKING] Enviando notificación "pedido en camino"...');
+        const resultado = await notificacionService.enviarWhatsApp(
+          telefono,
+          notificacionService.templates.pedidoEnCamino(linkRastreo),
+          { envioId, tipo: 'pedido_en_camino' }
+        );
+        console.log('[TRACKING] Resultado:', resultado);
+      } else if (nuevoEstado === 'ENTREGADO') {
+        // Pedido entregado
+        console.log('[TRACKING] Enviando notificación "pedido entregado"...');
+        const resultado = await notificacionService.enviarWhatsApp(
+          telefono,
+          notificacionService.templates.pedidoEntregado(envioActualizado.tienda.nombre),
+          { envioId, tipo: 'pedido_entregado' }
+        );
+        console.log('[TRACKING] Resultado:', resultado);
+      }
+    } else {
+      console.log('[TRACKING] ⚠️ No se envió notificación - tienda no tiene teléfono');
+    }
 
     return res.status(200).json({
       success: true,

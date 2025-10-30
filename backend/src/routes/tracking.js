@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { verifyToken } = require('../middleware/authMiddleware');
 const { requireRole } = require('../middleware/roleMiddleware');
+const { verificarSuscripcionActiva } = require('../middleware/suscripcionMiddleware');
 const {
   updateUbicacion,
   getUbicacion,
@@ -11,12 +12,13 @@ const {
 /**
  * POST /api/tracking/:envioId/ubicacion
  * Actualizar ubicación del motorizado
- * Requiere: MOTORIZADO
+ * Requiere: MOTORIZADO con suscripción activa
  */
 router.post(
   '/:envioId/ubicacion',
   verifyToken,
   requireRole(['MOTORIZADO']),
+  verificarSuscripcionActiva,
   updateUbicacion
 );
 
@@ -34,12 +36,13 @@ router.get(
 /**
  * PUT /api/tracking/:envioId/estado
  * Cambiar estado del envío (ASIGNADO -> EN_CURSO -> ENTREGADO)
- * Requiere: MOTORIZADO
+ * Requiere: MOTORIZADO con suscripción activa
  */
 router.put(
   '/:envioId/estado',
   verifyToken,
   requireRole(['MOTORIZADO']),
+  verificarSuscripcionActiva,
   cambiarEstadoEnvio
 );
 

@@ -3,15 +3,17 @@ const router = express.Router();
 const ofertasController = require('../controllers/ofertasController');
 const { verifyToken } = require('../middleware/authMiddleware');
 const { requireRole } = require('../middleware/roleMiddleware');
+const { verificarSuscripcionActiva } = require('../middleware/suscripcionMiddleware');
 
 /**
  * POST /api/ofertas
- * Crear una nueva oferta (solo motorizados)
+ * Crear una nueva oferta (solo motorizados con suscripción activa)
  */
 router.post(
   '/',
   verifyToken,
   requireRole(['MOTORIZADO']),
+  verificarSuscripcionActiva,
   ofertasController.createOferta
 );
 

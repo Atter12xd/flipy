@@ -1,4 +1,5 @@
 const prisma = require('../config/prisma');
+const notificacionService = require('../services/notificacionService');
 
 /**
  * Crear una nueva oferta para un envío
@@ -97,9 +98,42 @@ const createOferta = async (req, res) => {
             },
           },
         },
-        envio: true,
+        envio: {
+          include: {
+            tienda: {
+              include: {
+                user: {
+                  select: {
+                    phone: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
+
+    // Notificar a la tienda sobre la nueva oferta
+    console.log('\n[OFERTAS DEBUG] ======================');
+    console.log('[OFERTAS DEBUG] Tienda user:', oferta.envio.tienda.user);
+    console.log('[OFERTAS DEBUG] Phone:', oferta.envio.tienda.user?.phone);
+    console.log('[OFERTAS DEBUG] ======================\n');
+    
+    const telefonoTienda = oferta.envio.tienda.user?.phone;
+    console.log('[OFERTAS] Teléfono de tienda:', telefonoTienda || 'NO TIENE');
+    
+    if (telefonoTienda) {
+      console.log('[OFERTAS] Enviando notificación de nueva oferta...');
+      const resultado = await notificacionService.enviarWhatsApp(
+        telefonoTienda,
+        notificacionService.templates.nuevaOferta(envioId, precioOferta, tiempoEstimado),
+        { envioId, ofertaId: oferta.id, tipo: 'nueva_oferta' }
+      );
+      console.log('[OFERTAS] Resultado:', resultado);
+    } else {
+      console.log('[OFERTAS] ⚠️ No se envió notificación - tienda no tiene teléfono');
+    }
 
     return res.status(201).json({
       success: true,
@@ -276,6 +310,27 @@ const aceptarOferta = async (req, res) => {
 
       return { oferta: ofertaActualizada, envio: envioActualizado };
     });
+
+    // Notificar al motorizado ganador
+    console.log('\n[OFERTAS ACEPTAR DEBUG] ======================');
+    console.log('[OFERTAS ACEPTAR DEBUG] Motorizado user:', resultado.oferta.motorizado.user);
+    console.log('[OFERTAS ACEPTAR DEBUG] Phone:', resultado.oferta.motorizado.user?.phone);
+    console.log('[OFERTAS ACEPTAR DEBUG] ======================\n');
+    
+    const telefonoMotorizado = resultado.oferta.motorizado.user?.phone;
+    console.log('[OFERTAS ACEPTAR] Teléfono de motorizado:', telefonoMotorizado || 'NO TIENE');
+    
+    if (telefonoMotorizado) {
+      console.log('[OFERTAS ACEPTAR] Enviando notificación de oferta ganada...');
+      const resultadoNotif = await notificacionService.enviarWhatsApp(
+        telefonoMotorizado,
+        notificacionService.templates.ofertaGanada(oferta.envioId, oferta.envio.origen.direccion),
+        { envioId: oferta.envioId, ofertaId, tipo: 'oferta_ganada' }
+      );
+      console.log('[OFERTAS ACEPTAR] Resultado:', resultadoNotif);
+    } else {
+      console.log('[OFERTAS ACEPTAR] ⚠️ No se envió notificación - motorizado no tiene teléfono');
+    }
 
     return res.json({
       success: true,
